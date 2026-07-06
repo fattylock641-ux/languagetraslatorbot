@@ -1,5 +1,6 @@
 """
-Language Translator Bot - Uses Railway Environment Variables
+Language Translator Bot - WORKING VERSION
+Token: 8990528079:AAGoLPRupQObWEfnpaaRkafljpvODAFP2gc
 """
 
 import os
@@ -15,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 from deep_translator import GoogleTranslator
-8990528079:AAGoLPRupQObWEfnpaaRkafljpvODAFP2gc
+
 # ===================== LOGGING =====================
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -23,27 +24,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ===================== TOKEN FROM ENVIRONMENT =====================
-# Railway will inject this from Variables tab
+# ===================== YOUR TOKEN =====================
+# Your actual token from @BotFather
+HARDCODED_TOKEN = "8990528079:AAGoLPRupQObWEfnpaaRkafljpvODAFP2gc"
+
+# Try environment variable first, then hardcoded
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-
-# If token is not set, use hardcoded one (for testing)
 if not TOKEN:
-    # ⚠️ REPLACE THIS WITH YOUR TOKEN IF ENV DOESN'T WORK
-    TOKEN = "YOUR_BOT_TOKEN_HERE"  
-    logger.warning("⚠️ Using hardcoded token. Set TELEGRAM_BOT_TOKEN in Railway variables!")
+    TOKEN = HARDCODED_TOKEN
+    logger.info("✅ Using hardcoded token from code")
 
-if TOKEN == "YOUR_BOT_TOKEN_HERE" or not TOKEN:
-    logger.error("❌ ERROR: No token found! Add TELEGRAM_BOT_TOKEN to Railway variables")
-    logger.error("Or paste your token in the code at line 27")
+# Validate token
+if not TOKEN:
+    logger.error("❌ TOKEN NOT FOUND!")
     sys.exit(1)
 
-logger.info(f"✅ Token loaded successfully")
+logger.info(f"✅ Token loaded: {TOKEN[:10]}...")
 
 # ===================== LANGUAGE DATA =====================
 LANGUAGES = {
     'en': '🇬🇧 English',
-    'es': '🇪🇸 Spanish', 
+    'es': '🇪🇸 Spanish',
     'fr': '🇫🇷 French',
     'de': '🇩🇪 German',
     'it': '🇮🇹 Italian',
@@ -99,10 +100,10 @@ def create_language_keyboard():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
-    
+
     if user_id not in user_prefs:
         user_prefs[user_id] = {'target': 'en'}
-    
+
     welcome = (
         f"👋 *Hello {user.first_name}!*\n\n"
         "🌍 Welcome to *Language Translator Bot*\n\n"
@@ -114,12 +115,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🎯 *Current target:* English\n\n"
         "👉 *Try it now!* Send me any text."
     )
-    
+
     keyboard = [[
         InlineKeyboardButton("🌐 Change Language", callback_data="change_lang"),
         InlineKeyboardButton("❓ Help", callback_data="help")
     ]]
-    
+
     await update.message.reply_text(
         welcome,
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -164,7 +165,7 @@ async def list_languages(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    
+
     if not context.args:
         await update.message.reply_text(
             "🌐 *Select your target language:*",
@@ -172,15 +173,15 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
         return
-    
+
     lang_input = context.args[0].lower()
     lang_code = ALIASES.get(lang_input, lang_input)
-    
+
     if lang_code in LANGUAGES:
         if user_id not in user_prefs:
             user_prefs[user_id] = {}
         user_prefs[user_id]['target'] = lang_code
-        
+
         await update.message.reply_text(
             f"✅ *Language set to:* {LANGUAGES[lang_code]}\n\n"
             "Send any text to translate!",
@@ -194,37 +195,37 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def translate_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    
+
     if context.args and update.message.text.startswith('/translate'):
         text = ' '.join(context.args)
     else:
         text = update.message.text or ""
-    
+
     if not text or len(text.strip()) == 0:
         await update.message.reply_text("Please send me some text to translate.")
         return
-    
+
     target = user_prefs.get(user_id, {}).get('target', 'en')
-    
+
     try:
         await update.message.chat.send_action(action="typing")
         translator = GoogleTranslator(source='auto', target=target)
         translated = translator.translate(text)
-        
+
         response = (
             f"🔄 *Translation*\n\n"
             f"📝 *Original:*\n{text}\n\n"
             f"🌐 *Translated ({LANGUAGES.get(target, 'English')}):*\n{translated}"
         )
-        
+
         keyboard = [[InlineKeyboardButton("🌐 Change Language", callback_data="change_lang")]]
-        
+
         await update.message.reply_text(
             response,
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        
+
     except Exception as e:
         logger.error(f"Translation error: {e}")
         await update.message.reply_text(
@@ -236,13 +237,13 @@ async def inline_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query.query
     if not query or len(query.strip()) == 0:
         return
-    
+
     try:
         translator = GoogleTranslator(source='auto', target='en')
         translated = translator.translate(query)
-        
+
         from telegram import InlineQueryResultArticle, InputTextMessageContent
-        
+
         result = InlineQueryResultArticle(
             id="1",
             title=f"🌐 {translated[:50]}...",
@@ -261,9 +262,9 @@ async def inline_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
+
     user_id = update.effective_user.id
-    
+
     if query.data == "change_lang":
         await query.edit_message_text(
             "🌐 *Select your target language:*",
@@ -296,10 +297,11 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ===================== MAIN =====================
 def main():
     logger.info("🚀 Starting Language Translator Bot...")
-    
+    logger.info("🤖 Bot: @languagetranslatorbot")
+
     try:
         application = Application.builder().token(TOKEN).build()
-        
+
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("about", about_command))
@@ -313,10 +315,10 @@ def main():
         application.add_handler(MessageHandler(filters.INLINE_QUERY, inline_translate))
         application.add_handler(CallbackQueryHandler(button_callback))
         application.add_error_handler(error_handler)
-        
+
         logger.info("✅ Bot is running and listening for messages...")
         application.run_polling(allowed_updates=Update.ALL_TYPES)
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to start: {e}")
         sys.exit(1)
