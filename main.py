@@ -1,6 +1,5 @@
 """
-Language Translator Bot - WORKING VERSION
-Instructions: Replace "YOUR_BOT_TOKEN_HERE" with your actual token
+Language Translator Bot - Uses Railway Environment Variables
 """
 
 import os
@@ -24,14 +23,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ===================== TOKEN - REPLACE THIS =====================
-# 👇👇👇 PASTE YOUR TOKEN BETWEEN THE QUOTES BELOW 👇👇👇
-TOKEN = "YOUR_BOT_TOKEN_HERE"
-# ☝️☝️☝️ REPLACE "YOUR_BOT_TOKEN_HERE" WITH YOUR ACTUAL TOKEN ☝️☝️☝️
+# ===================== TOKEN FROM ENVIRONMENT =====================
+# Railway will inject this from Variables tab
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
-if TOKEN == "YOUR_BOT_TOKEN_HERE":
-    logger.error("❌ ERROR: You forgot to paste your token!")
-    logger.error("Open main.py and replace 'YOUR_BOT_TOKEN_HERE' with your actual token")
+# If token is not set, use hardcoded one (for testing)
+if not TOKEN:
+    # ⚠️ REPLACE THIS WITH YOUR TOKEN IF ENV DOESN'T WORK
+    TOKEN = "YOUR_BOT_TOKEN_HERE"  
+    logger.warning("⚠️ Using hardcoded token. Set TELEGRAM_BOT_TOKEN in Railway variables!")
+
+if TOKEN == "YOUR_BOT_TOKEN_HERE" or not TOKEN:
+    logger.error("❌ ERROR: No token found! Add TELEGRAM_BOT_TOKEN to Railway variables")
+    logger.error("Or paste your token in the code at line 27")
     sys.exit(1)
 
 logger.info(f"✅ Token loaded successfully")
