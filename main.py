@@ -1,5 +1,6 @@
 """
-Language Translator Bot - Fixed for Railway
+Language Translator Bot - WORKING VERSION
+Instructions: Replace "YOUR_BOT_TOKEN_HERE" with your actual token
 """
 
 import os
@@ -23,23 +24,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ===================== TOKEN HANDLING =====================
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+# ===================== TOKEN - REPLACE THIS =====================
+# 👇👇👇 PASTE YOUR TOKEN BETWEEN THE QUOTES BELOW 👇👇👇
+TOKEN = "YOUR_BOT_TOKEN_HERE"
+# ☝️☝️☝️ REPLACE "YOUR_BOT_TOKEN_HERE" WITH YOUR ACTUAL TOKEN ☝️☝️☝️
 
-if not TOKEN:
-    logger.error("=" * 50)
-    logger.error("❌ TELEGRAM_BOT_TOKEN not found!")
-    logger.error("=" * 50)
-    logger.error("To fix this on Railway:")
-    logger.error("1. Go to your Railway project")
-    logger.error("2. Click on your service")
-    logger.error("3. Click 'Variables' tab")
-    logger.error("4. Add variable: TELEGRAM_BOT_TOKEN = your_token")
-    logger.error("5. Click 'Deploy'")
-    logger.error("=" * 50)
+if TOKEN == "YOUR_BOT_TOKEN_HERE":
+    logger.error("❌ ERROR: You forgot to paste your token!")
+    logger.error("Open main.py and replace 'YOUR_BOT_TOKEN_HERE' with your actual token")
     sys.exit(1)
 
-logger.info(f"✅ Token loaded: {TOKEN[:10]}...{TOKEN[-5:]}")
+logger.info(f"✅ Token loaded successfully")
 
 # ===================== LANGUAGE DATA =====================
 LANGUAGES = {
@@ -62,6 +57,10 @@ LANGUAGES = {
     'th': '🇹🇭 Thai',
     'id': '🇮🇩 Indonesian',
     'ms': '🇲🇾 Malay',
+    'sw': '🇰🇪 Swahili',
+    'ha': '🇳🇬 Hausa',
+    'yo': '🇳🇬 Yoruba',
+    'ig': '🇳🇬 Igbo',
 }
 
 ALIASES = {
@@ -71,13 +70,13 @@ ALIASES = {
     'hindi': 'hi', 'arabic': 'ar', 'dutch': 'nl',
     'polish': 'pl', 'turkish': 'tr', 'vietnamese': 'vi',
     'thai': 'th', 'indonesian': 'id', 'malay': 'ms',
+    'swahili': 'sw', 'hausa': 'ha', 'yoruba': 'yo', 'igbo': 'ig',
 }
 
 user_prefs = {}
 
-# ===================== HELPERS =====================
+# ===================== KEYBOARD =====================
 def create_language_keyboard():
-    """Create language selection keyboard."""
     keyboard = []
     row = []
     for idx, (code, name) in enumerate(sorted(LANGUAGES.items())):
@@ -92,9 +91,8 @@ def create_language_keyboard():
         keyboard.append(row)
     return InlineKeyboardMarkup(keyboard)
 
-# ===================== COMMAND HANDLERS =====================
+# ===================== COMMANDS =====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command."""
     user = update.effective_user
     user_id = user.id
     
@@ -125,7 +123,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /help command."""
     help_text = (
         "🆘 *Commands*\n\n"
         "• /start - Start the bot\n"
@@ -141,7 +138,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /about command."""
     about = (
         "🤖 *Language Translator Bot*\n\n"
         "⚡ 20+ languages supported\n"
@@ -154,7 +150,6 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(about, parse_mode='Markdown')
 
 async def list_languages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /langs command."""
     lang_list = "\n".join([f"• `{code}` - {name}" for code, name in LANGUAGES.items()])
     message = (
         "🌍 *Supported Languages*\n\n"
@@ -164,7 +159,6 @@ async def list_languages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(message, parse_mode='Markdown')
 
 async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /setlang command."""
     user_id = update.effective_user.id
     
     if not context.args:
@@ -195,7 +189,6 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def translate_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Translate text message."""
     user_id = update.effective_user.id
     
     if context.args and update.message.text.startswith('/translate'):
@@ -236,7 +229,6 @@ async def translate_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def inline_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle inline queries."""
     query = update.inline_query.query
     if not query or len(query.strip()) == 0:
         return
@@ -263,7 +255,6 @@ async def inline_translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Inline error: {e}")
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle button callbacks."""
     query = update.callback_query
     await query.answer()
     
@@ -296,18 +287,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle errors."""
     logger.error(f"Update {update} caused error {context.error}")
 
 # ===================== MAIN =====================
 def main():
-    """Start the bot."""
     logger.info("🚀 Starting Language Translator Bot...")
     
     try:
         application = Application.builder().token(TOKEN).build()
         
-        # Add handlers
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("about", about_command))
