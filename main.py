@@ -15,7 +15,7 @@ from telegram.ext import (
     filters,
 )
 from deep_translator import GoogleTranslator
-
+8990528079:AAGoLPRupQObWEfnpaaRkafljpvODAFP2gc
 # ===================== LOGGING =====================
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
